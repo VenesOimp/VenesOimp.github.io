@@ -19,30 +19,30 @@ jQuery(document).ready( function ($) {
 
 		questions.push({
 
-			'question' : ' Для монополии НЕверно, что',
+			'question' : 'Текст вопроса ?',
 
 			'options' : [
 
-				'',                             // индекс 0
+				'вариант ответа 1',                             // индекс 0
 				'вариант 2 (правильный в данном случае)',		// индекс 1
 				'вариант 3',									// индекс 2
 				'вариант N'										// индекс 3
 
 			],
 			
-			//ИНДЕКС ПРАВИЛЬНОГО ОТВЕТА (ОТСЧЕТ НАЧИНАЕТСЯ С НУЛЯ):
+			//НОМЕР ПРАВИЛЬНОГО ОТВЕТА (ОТСЧЕТ НАЧИНАЕТСЯ С НУЛЯ (это индекс элемента массива) ):
 			'right' : 1,
 
-			//НАЗВАНИЕ КАРТИНКИ В ПАПКЕ images С ЕЕ РАСШИРЕНИЕМ. ЕСЛИ КАРТИНКА НЕ НУЖНА, ТО ПРОСТО НЕ ПИСАТЬ НИЧЕГО,
+			//НАЗВАНИЕ КАРТИНКИ В ПАПКЕ images. ЕСЛИ КАРТИНКА НЕ НУЖНА, ТО ПРОСТО НЕ ПИСАТЬ НИЧЕГО,
 			//ЛИБО НАПИСАТЬ 'image':''
-			'image' : 'Картинка.jpg'
+			'image' : 'Ремарк.jpg'
 
 		});
 
 
 
 
-	НОРМАЛЬНЫЙ ПРИМЕР С КАРТИНКОЙ:
+	НОРМАЛЬНЫЙ ПРИМЕР С КАРТИНКОЙ: 
 
 		questions.push({
 
@@ -50,10 +50,10 @@ jQuery(document).ready( function ($) {
 
 			'options' : [
 
-				'Теремок',
+				'Мертвые души',
 				'Три товарища',
-				'Колобок',
-				'Репка'
+				'Человек-невидимка',
+				'Кто такой Ремарк?'
 
 			],
 
@@ -74,16 +74,22 @@ jQuery(document).ready( function ($) {
 
 			'options' : [
 
-				'Теремок',
+				'Мертвые души',
 				'Три товарища',
-				'Колобок',
-				'Репка'
+				'Человек-невидимка',
+				'Кто такой Ремарк?'
 
 			],
 
 			'right' : 1
 
 		});
+
+
+	UPD: ЕСЛИ ПРАВИЛЬНЫЙ ВАРИАНТОВ ОТВЕТА НЕСКОЛЬКО, ТО ИНДЕКСЫ ЗАПИСЫваЮТСЯ В МАССИВ
+	ПРИВЕР
+
+		'right' : [1, 3]
 
 
 	*
@@ -112,7 +118,7 @@ jQuery(document).ready( function ($) {
 
 		],
 
-		'right' : 2,3,
+		'right' : [2,3]
 
 		
 
@@ -127,11 +133,11 @@ jQuery(document).ready( function ($) {
 			'Темп инфляции равен нулю, т.к. согласно количественной теории денег изменение денежной массы не влияет на номинальные показатели.',
 			'Темп инфляции равен нулю, т.к. согласно количественной теории денег изменение денежной массы не влияет на реальные показатели.',
 			'Темп инфляции равен темпу прироста скорости обращения денег. '
-			' Темп инфляции равен темпу прироста денежной массы.'
+			'Темп инфляции равен темпу прироста денежной массы.'
 
 		],
 
-		'right' : 2,
+		'right' : 2
 
 	});
 
@@ -148,7 +154,7 @@ jQuery(document).ready( function ($) {
 
 		],
 
-		'right' : 0,
+		'right' : 0
 
 		
 
@@ -204,12 +210,25 @@ jQuery(document).ready( function ($) {
 			var paragraph = $('<p>');
 			var label = $('<label>', {text: item});
 
+			if( Array.isArray( questionItem['right'] ) ){ //if 1 option right
 
-			if( i == questionItem['right'] ){
-				var input = $('<input>', { type: 'radio', name: index, id: 'right' });
+				if( questionItem['right'].indexOf( i ) != -1 ){
+					var input = $('<input>', { type: 'radio', name: index, id: 'right' });
+				}
+				else{
+					var input = $('<input>', { type: 'radio', name: index });
+				}
+	
 			}
 			else{
-				var input = $('<input>', { type: 'radio', name: index });
+
+				if( i == questionItem['right'] ){
+					var input = $('<input>', { type: 'radio', name: index, id: 'right' });
+				}
+				else{
+					var input = $('<input>', { type: 'radio', name: index });
+				}
+
 			}
 
 
@@ -232,9 +251,11 @@ jQuery(document).ready( function ($) {
 
 
 	var rightAnswers = {}; //Right - selected, wrong - false
-	var wrongAnswers = {}; //Right - false, wrong - [selected, right]
+	var wrongAnswers = {}; //Right - false, wrong - [selected, [right_answers]]
 
 	$('.questions-window').fadeIn(200);
+
+	var rightAnswersArray = [];
 
 	$('input').click( function(e) {
 
@@ -247,6 +268,8 @@ jQuery(document).ready( function ($) {
 		}
 		else{
 
+			rightAnswersArray = [];
+
 			var number = $(this).attr('name');
 
 			rightAnswers[ number ] = false;
@@ -258,12 +281,16 @@ jQuery(document).ready( function ($) {
 			localAnswersInputs.each( function(i) {
 
 				if( $(this).attr('id') ){
-				
-					wrongAnswers[ number ] = [  selectedAnswer, $(this).parent().text() ];  //[selected, right]
+
+					var right =  $(this).parent().text();
+
+					rightAnswersArray.push( right );
 				
 				}
 
 			});
+
+			wrongAnswers[ number ] = [  selectedAnswer, rightAnswersArray ];  //[selected, right_answers]
 
 
 		}
@@ -282,14 +309,19 @@ jQuery(document).ready( function ($) {
 
 	$('.end').click( function () { //results output
 
+
 		$('.answer-result').remove();
 		$('.answers-window hr').remove();
+
+		var rightAnswersArray = [];
 
 		$('.question').each( function(i) {
 
 			var inputs = $(this).find('.options p label input');
 
 			var checkedCounter = 0;
+
+			rightAnswersArray = [];
 
 			var rightAnswer = '';
 
@@ -304,6 +336,7 @@ jQuery(document).ready( function ($) {
 				if( $(this).attr('id') ){
 				
 					rightAnswer = $(this).parent().text();
+					rightAnswersArray.push( rightAnswer );
 				
 				}
 
@@ -314,7 +347,7 @@ jQuery(document).ready( function ($) {
 
 				rightAnswers[ i ] = false;
 
-				wrongAnswers[ i ] = [  'не выбрано', rightAnswer ];
+				wrongAnswers[ i ] = [  'не выбрано', rightAnswersArray ];
 
 			}
 
@@ -352,15 +385,19 @@ jQuery(document).ready( function ($) {
   				var wrongParagraph = $('<p>', { text: 'Ваш неправильный ответ: ' });
   				var wrongSpan = $('<span>', { class: 'wrong-answer', text: wrongAnswers[answerNumber][0] });
 
-  				var rightParagraph = $('<p>', { text: 'Правильный ответ: ' });
-  				var rightSpan = $('<span>', { class: 'right-answer', text: wrongAnswers[answerNumber][1] });
-
   				wrongParagraph.append(wrongSpan);
-  				rightParagraph.append(rightSpan);
-
   				resultContainer.append(wrongParagraph);
-  				resultContainer.append(rightParagraph);
 
+
+  				wrongAnswers[answerNumber][1].forEach( function (elem, i, arr) {
+
+  					var rightParagraph = $('<p>', { text: 'Правильный ответ ' + ( Number(i) + 1 ) + ': ' });
+  					var rightSpan = $('<span>', { class: 'right-answer', text: wrongAnswers[answerNumber][1][i] });
+
+  					rightParagraph.append(rightSpan);
+  					resultContainer.append(rightParagraph);
+
+  				});
 
   			}
 
