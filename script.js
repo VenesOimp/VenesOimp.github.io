@@ -121,6 +121,8 @@ jQuery(document).ready( function ($) {
 
 		'right' : [2,3]
 		
+	});
+		
 	questions.push({
 
 		'question' : ' Для монополии НЕверно, что',
